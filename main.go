@@ -7,11 +7,13 @@ import (
 )
 
 func main() {
-
+	// core
 	core := framework.NewCore()
 
+	// router
 	registerRouter(core)
 
+	//
 	server := &http.Server{
 		Addr:    ":8080",
 		Handler: framework.NewCore(),
