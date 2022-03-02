@@ -4,18 +4,19 @@ import (
 	"net/http"
 
 	"github.com/hideaki10/coredemo/framework"
+	"github.com/hideaki10/coredemo/router"
 )
 
 func main() {
 	// core
 	core := framework.NewCore()
 
-	// router
-	registerRouter(core)
+	// // router
+	router.RegisterRouter(core)
 
 	//
 	server := &http.Server{
-		Addr:    ":8080",
+		Addr:    ":8888",
 		Handler: framework.NewCore(),
 	}
 	server.ListenAndServe()

@@ -57,6 +57,9 @@ func (c *Core) Delete(url string, handler Controller) {
 	upperUrl := strings.ToUpper(url)
 	c.router["DELETE"][upperUrl] = handler
 }
+func (c *Core) Group(prefix string) *Group {
+	return NewGroup(c, prefix)
+}
 
 func (c *Core) FindRouteByRequest(request *http.Request) Controller {
 
