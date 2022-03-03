@@ -8,37 +8,42 @@ type IGroup interface {
 }
 
 type Group struct {
-	core   *Core
-	parent *Group
-	prefix string
+	core        *Core
+	parent      *Group
+	prefix      string
+	middlewares []Controller
 }
 
 func NewGroup(core *Core, prefix string) *Group {
 	return &Group{
-		core:   core,
-		parent: nil,
-		prefix: prefix,
+		core:        core,
+		parent:      nil,
+		prefix:      prefix,
+		middlewares: []Controller{},
 	}
 }
 
-func (g *Group) Get(uri string, handler Controller) {
+func (g *Group) Get(uri string, handlers ...Controller) {
 	uri = g.getAbsolutePrefix() + uri
-	g.core.Get(uri, handler)
+	allHandlers := append(g.getMiddlewares(), handlers...)
+	g.core.Get(uri, allHandlers...)
+}
+func (g *Group) Post(uri string, handlers ...Controller) {
+	uri = g.getAbsolutePrefix() + uri
+	allHandlers := append(g.getMiddlewares(), handlers...)
+	g.core.Post(uri, allHandlers...)
 }
 
-func (g *Group) Post(uri string, handler Controller) {
+func (g *Group) Put(uri string, handlers ...Controller) {
 	uri = g.getAbsolutePrefix() + uri
-	g.core.Post(uri, handler)
+	allHandlers := append(g.getMiddlewares(), handlers...)
+	g.core.Put(uri, allHandlers...)
 }
 
-func (g *Group) Put(uri string, handler Controller) {
+func (g *Group) Delete(uri string, handlers ...Controller) {
 	uri = g.getAbsolutePrefix() + uri
-	g.core.Put(uri, handler)
-}
-
-func (g *Group) Delete(uri string, handler Controller) {
-	uri = g.getAbsolutePrefix() + uri
-	g.core.Delete(uri, handler)
+	allHandlers := append(g.getMiddlewares(), handlers...)
+	g.core.Delete(uri, allHandlers...)
 }
 
 func (g *Group) getAbsolutePrefix() string {
@@ -47,6 +52,18 @@ func (g *Group) getAbsolutePrefix() string {
 	}
 
 	return g.parent.getAbsolutePrefix() + g.prefix
+}
+
+func (g *Group) getMiddlewares() []Controller {
+	if g.parent == nil {
+		return g.middlewares
+	}
+
+	return append(g.parent.middlewares, g.middlewares...)
+}
+
+func (g *Group) Use(middlewares ...Controller) {
+	g.middlewares = append(g.middlewares, middlewares...)
 }
 
 func (g *Group) Group(uri string) *Group {
