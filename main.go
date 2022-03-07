@@ -1,7 +1,12 @@
 package main
 
 import (
+	"context"
+	"log"
 	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
 
 	"github.com/hideaki10/coredemo/framework"
 	"github.com/hideaki10/coredemo/middleware"
@@ -27,5 +32,16 @@ func main() {
 		Addr:    ":8888",
 		Handler: framework.NewCore(),
 	}
-	server.ListenAndServe()
+	go func() {
+		server.ListenAndServe()
+	}()
+
+	quit := make(chan os.Signal)
+	//signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)
+	<-quit
+
+	if err := server.Shutdown(context.Background()); err != nil {
+		log.Fatal("server shutdown error: ", err)
+	}
 }
