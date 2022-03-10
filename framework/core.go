@@ -24,17 +24,25 @@ func NewCore() *Core {
 
 func (c *Core) ServeHTTP(response http.ResponseWriter, request *http.Request) {
 	ctx := NewContext(request, response)
-	handlers := c.FindRouteByRequest(request)
+	node := c.FindRouteNodeByRequest(request)
 
-	if handlers != nil {
-		ctx.Json(404, "not found")
+	if node != nil {
+		// ctx.Json(404, "not found")
+		// return
+
+		ctx.SetStatus(404).Json("not found")
 		return
 	}
 
-	ctx.SetHandlers(handlers)
+	ctx.SetHandlers(node.handlers)
 
+	params := node.parseParamsFromEndNode(request.URL.Path)
+	ctx.SetParams(params)
 	if err := ctx.Next(); err != nil {
-		ctx.Json(500, "internal server error")
+		// ctx.Json(500, "internal server error")
+		// return
+
+		ctx.SetStatus(500).Json("internal server error")
 		return
 	}
 }
@@ -72,14 +80,14 @@ func (c *Core) Group(prefix string) *Group {
 	return NewGroup(c, prefix)
 }
 
-func (c *Core) FindRouteByRequest(request *http.Request) []Controller {
+func (c *Core) FindRouteNodeByRequest(request *http.Request) *node {
 
 	uri := request.URL.Path
 	method := request.Method
 	upperMethod := strings.ToUpper(method)
 
 	if methodHandlers, ok := c.router[upperMethod]; ok {
-		return methodHandlers.FindHandler(uri)
+		return methodHandlers.root.matchNode(uri)
 	}
 
 	return nil
